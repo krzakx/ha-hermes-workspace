@@ -1,5 +1,5 @@
 name: "Hermes Workspace"
-version: "1.1.0"
+version: "1.1.1"
 slug: "hermes-workspace"
 description: "Workspace dashboard for Hermes AI assistant"
 url: "https://github.com/outsourc-e/hermes-workspace"
@@ -15,6 +15,7 @@ options:
   hermes_dashboard_url: "http://addon_0a6523c6_hermes_agent:8080/dashboard"
   hermes_api_token: ""
   hermes_password: ""
+  allow_insecure_remote: false
   cookie_secure: false
   trust_proxy: false
 schema:
@@ -22,5 +23,6 @@ schema:
   hermes_dashboard_url: "str"
   hermes_api_token: "str?"
   hermes_password: "str?"
+  allow_insecure_remote: "bool"
   cookie_secure: "bool"
   trust_proxy: "bool"
