@@ -42,35 +42,3 @@ RUN chmod +x /run.sh
 
 CMD ["/run.sh"]
 EOF
-
-# Zmień wersję na 1.0.3 (wymuszy pobranie nowego kodu przez HA)
-cat > hermes-workspace/config.yaml << 'EOF'
-name: "Hermes Workspace"
-version: "1.0.3"
-slug: "hermes-workspace"
-description: "Workspace dashboard for Hermes AI assistant"
-url: "https://github.com/outsourc-e/hermes-workspace"
-arch:
-  - aarch64
-  - amd64
-  - armhf
-  - armv7
-init: false
-map: []
-ports:
-  3000/tcp: 3000
-options:
-  hermes_agent_url: "http://addon_0a6523c6_hermes_agent:8080"
-  hermes_dashboard_url: "http://addon_0a6523c6_hermes_agent:8080/dashboard"
-  hermes_api_token: ""
-  hermes_password: ""
-  cookie_secure: false
-  trust_proxy: false
-schema:
-  hermes_agent_url: "str"
-  hermes_dashboard_url: "str"
-  hermes_api_token: "str?"
-  hermes_password: "str?"
-  cookie_secure: "bool"
-  trust_proxy: "bool"
-EOF
