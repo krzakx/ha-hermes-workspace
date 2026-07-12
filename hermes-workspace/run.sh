@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# Wymuszenie nasłuchiwania na wszystkich interfejsach sieciowych (0.0.0.0)
+export HOST="0.0.0.0"
+
 if [ -n "${HERMES_AGENT_URL}" ]; then
     export HERMES_AGENT_URL="${HERMES_AGENT_URL}"
     export NEXT_PUBLIC_HERMES_AGENT_URL="${HERMES_AGENT_URL}"
