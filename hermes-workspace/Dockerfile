@@ -3,10 +3,18 @@ FROM ${BUILD_FROM}
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# Install git, curl, then Node.js 22 via NodeSource
-RUN apk add --no-cache curl git \
-    && curl -fsSL https://deb.nodesource.com/setup_22.x | sh - \
-    && apk add --no-cache nodejs
+RUN apk add --no-cache curl git tar xz
+
+# Instalacja Node.js 22 (oficjalne binaria dla Alpine musl)
+ENV NODE_VERSION=v22.12.0
+RUN ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ]; then NODE_ARCH="x64"; \
+    elif [ "$ARCH" = "aarch64" ]; then NODE_ARCH="arm64"; \
+    else NODE_ARCH="$ARCH"; fi && \
+    curl -fsSL "https://nodejs.org/dist/${NODE_VERSION}/node-${NODE_VERSION}-linux-${NODE_ARCH}-musl.tar.xz" -o node.tar.xz && \
+    tar -xJf node.tar.xz -C /usr/local --strip-components=1 && \
+    rm -f node.tar.xz && \
+    node --version && npm --version
 
 WORKDIR /opt/hermes-workspace
 
@@ -15,10 +23,7 @@ RUN git clone --depth 1 --branch main \
     && rm -rf .git
 
 RUN npm install
-
-# Aplikacja używa Vite, więc po prostu odpalamy build
 RUN npm run build
-
 RUN npm prune --production 2>/dev/null || true
 
 ENV PORT=3000
