@@ -3,8 +3,9 @@ FROM ${BUILD_FROM}
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
+# Install Node.js and git (without version constraint - Alpine 3.18 has Node 18)
 RUN apk add --no-cache \
-    nodejs=20.* \
+    nodejs \
     npm \
     git
 
