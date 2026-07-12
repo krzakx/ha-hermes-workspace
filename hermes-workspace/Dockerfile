@@ -1,14 +1,21 @@
 ARG BUILD_FROM=ghcr.io/home-assistant/amd64-base:3.18
+FROM ${BUILD_FROM}
 
-# ==========================================
-# ETAP 1: Budowanie aplikacji
-# Wymuszamy alpine3.18, aby zachować zgodność bibliotek z systemem HA!
-# ==========================================
-FROM node:22-alpine3.18 AS builder
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+# Instalacja narzędzi
+RUN apk add --no-cache curl git
+
+# Pobranie i instalacja Node.js 22 bezpośrednio z oficjalnego serwera (.tar.gz dla musl!)
+ENV NODE_VERSION=v22.12.0
+RUN ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ]; then NODE_ARCH="x64"; \
+    elif [ "$ARCH" = "aarch64" ]; then NODE_ARCH="arm64"; \
+    else NODE_ARCH="$ARCH"; fi && \
+    curl -fsSL "https://nodejs.org/dist/${NODE_VERSION}/node-${NODE_VERSION}-linux-${NODE_ARCH}-musl.tar.gz" | tar xz -C /usr/local --strip-components=1 && \
+    node --version && npm --version
 
 WORKDIR /opt/hermes-workspace
-
-RUN apk add --no-cache git
 
 RUN git clone --depth 1 --branch main \
     https://github.com/outsourc-e/hermes-workspace.git . \
@@ -16,23 +23,7 @@ RUN git clone --depth 1 --branch main \
 
 RUN npm install
 RUN npm run build
-RUN npm prune --production
-
-# ==========================================
-# ETAP 2: Obraz docelowy Home Assistant
-# ==========================================
-FROM ${BUILD_FROM}
-
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
-# Kopiujemy Node.js z etapu budowania (teraz wersje libstdc++ się zgadzają)
-COPY --from=builder /usr/local/bin/node /usr/local/bin/node
-COPY --from=builder /usr/local/bin/npm /usr/local/bin/npm
-COPY --from=builder /usr/local/lib/node_modules /usr/local/lib/node_modules
-
-# Kopiujemy gotową, zbudowaną aplikację
-WORKDIR /opt/hermes-workspace
-COPY --from=builder /opt/hermes-workspace /opt/hermes-workspace
+RUN npm prune --production 2>/dev/null || true
 
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
