@@ -3,11 +3,10 @@ FROM ${BUILD_FROM}
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# Install Node.js and git (without version constraint - Alpine 3.18 has Node 18)
-RUN apk add --no-cache \
-    nodejs \
-    npm \
-    git
+# Install git, curl, then Node.js 22 via NodeSource
+RUN apk add --no-cache curl git \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | sh - \
+    && apk add --no-cache nodejs
 
 WORKDIR /opt/hermes-workspace
 
@@ -17,15 +16,8 @@ RUN git clone --depth 1 --branch main \
 
 RUN npm install
 
-RUN if [ -f "next.config.js" ] || [ -f "next.config.mjs" ] || [ -f "next.config.ts" ]; then \
-        npm run build; \
-    elif [ -f "vite.config.ts" ] || [ -f "vite.config.js" ]; then \
-        npm run build; \
-    elif grep -q '"build"' package.json 2>/dev/null; then \
-        npm run build; \
-    else \
-        echo "No build script found, skipping build step"; \
-    fi
+# Aplikacja używa Vite, więc po prostu odpalamy build
+RUN npm run build
 
 RUN npm prune --production 2>/dev/null || true
 
@@ -49,3 +41,36 @@ COPY run.sh /
 RUN chmod +x /run.sh
 
 CMD ["/run.sh"]
+EOF
+
+# Zmień wersję na 1.0.3 (wymuszy pobranie nowego kodu przez HA)
+cat > hermes-workspace/config.yaml << 'EOF'
+name: "Hermes Workspace"
+version: "1.0.3"
+slug: "hermes-workspace"
+description: "Workspace dashboard for Hermes AI assistant"
+url: "https://github.com/outsourc-e/hermes-workspace"
+arch:
+  - aarch64
+  - amd64
+  - armhf
+  - armv7
+init: false
+map: []
+ports:
+  3000/tcp: 3000
+options:
+  hermes_agent_url: "http://addon_0a6523c6_hermes_agent:8080"
+  hermes_dashboard_url: "http://addon_0a6523c6_hermes_agent:8080/dashboard"
+  hermes_api_token: ""
+  hermes_password: ""
+  cookie_secure: false
+  trust_proxy: false
+schema:
+  hermes_agent_url: "str"
+  hermes_dashboard_url: "str"
+  hermes_api_token: "str?"
+  hermes_password: "str?"
+  cookie_secure: "bool"
+  trust_proxy: "bool"
+EOF
