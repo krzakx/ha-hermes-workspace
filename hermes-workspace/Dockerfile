@@ -2,8 +2,9 @@ ARG BUILD_FROM=ghcr.io/home-assistant/amd64-base:3.18
 
 # ==========================================
 # ETAP 1: Budowanie aplikacji
+# Wymuszamy alpine3.18, aby zachować zgodność bibliotek z systemem HA!
 # ==========================================
-FROM node:22-alpine AS builder
+FROM node:22-alpine3.18 AS builder
 
 WORKDIR /opt/hermes-workspace
 
@@ -24,7 +25,7 @@ FROM ${BUILD_FROM}
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# Kopiujemy Node.js z etapu budowania (działa idealnie, bo oba to Alpine)
+# Kopiujemy Node.js z etapu budowania (teraz wersje libstdc++ się zgadzają)
 COPY --from=builder /usr/local/bin/node /usr/local/bin/node
 COPY --from=builder /usr/local/bin/npm /usr/local/bin/npm
 COPY --from=builder /usr/local/lib/node_modules /usr/local/lib/node_modules
